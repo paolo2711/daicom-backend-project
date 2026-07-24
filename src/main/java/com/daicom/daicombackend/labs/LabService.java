@@ -1,5 +1,8 @@
 package com.daicom.daicombackend.labs;
 
+import com.daicom.daicombackend.auth.User;
+import com.daicom.daicombackend.auth.UserRepository;
+import com.daicom.daicombackend.common.audit.AuditService;
 import com.daicom.daicombackend.company.Company;
 import com.daicom.daicombackend.company.CompanyRepository;
 import com.daicom.daicombackend.labs.dto.LabRequest;
@@ -14,10 +17,15 @@ public class LabService {
 
     private final LabRepository labRepository;
     private final CompanyRepository companyRepository;
+    private final AuditService auditService;
+    private final UserRepository userRepository;
 
-    public LabService(LabRepository labRepository, CompanyRepository companyRepository) {
+    public LabService(LabRepository labRepository, CompanyRepository companyRepository,
+                       AuditService auditService, UserRepository userRepository) {
         this.labRepository = labRepository;
         this.companyRepository = companyRepository;
+        this.auditService = auditService;
+        this.userRepository = userRepository;
     }
 
     private Company getMainCompany() {
@@ -37,13 +45,18 @@ public class LabService {
         return new LabResponse(lab);
     }
 
-    public LabResponse create(LabRequest request) {
+    public LabResponse create(LabRequest request, String currentUsername) {
         Lab lab = new Lab();
         lab.setName(request.getName());
         lab.setCode(request.getCode());
         lab.setCompany(getMainCompany());
-        
+
         Lab savedLab = labRepository.save(lab);
+
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
+        auditService.registrar(currentUser, "CREATE_LAB", "Lab: " + savedLab.getName());
+
         return new LabResponse(savedLab);
     }
 

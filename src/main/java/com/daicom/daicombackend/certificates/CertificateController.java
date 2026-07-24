@@ -70,4 +70,18 @@ public class CertificateController {
     public ResponseEntity<CertificateResponse> update(@PathVariable Long id, @ModelAttribute CertificateRequest request) {
         return ResponseEntity.ok(certificateService.update(id, request));
     }
+
+    // Carga manual del PDF base (reemplaza el antiguo "subir Excel")
+    @PostMapping(value = "/{id}/upload-base", consumes = "multipart/form-data")
+    public ResponseEntity<CertificateResponse> uploadBase(
+            @PathVariable Long id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        return ResponseEntity.ok(certificateService.uploadBase(id, file));
+    }
+
+    // Estampa el QR (UUID) sobre el PDF base
+    @PostMapping("/{id}/attach-qr")
+    public ResponseEntity<CertificateResponse> attachQr(@PathVariable Long id) {
+        return ResponseEntity.ok(certificateService.attachQr(id));
+    }
 }

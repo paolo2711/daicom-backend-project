@@ -2,30 +2,27 @@ package com.daicom.daicombackend.orders.dto;
 
 import com.daicom.daicombackend.orders.OrderInvoice;
 import java.math.BigDecimal;
-import java.util.Date;
 
+/**
+ * Campos en snake_case para calzar con lo que el frontend lee
+ * (invoice_number, invoice_date, amount, pdf_url).
+ */
 public class OrderInvoiceResponse {
-    private Long id;
-    private Long orderId;
-    private String invoiceNumber;
-    private Date invoiceDate;
-    private BigDecimal amount;
-    private String pdf;
+    public Long id;
+    public Long order_id;
+    public String invoice_number;
+    public String invoice_date;
+    public BigDecimal amount;
+    public String pdf_url;
 
     public OrderInvoiceResponse(OrderInvoice invoice) {
         this.id = invoice.getId();
-        this.orderId = invoice.getOrder().getId();
-        this.invoiceNumber = invoice.getInvoiceNumber();
-        this.invoiceDate = invoice.getInvoiceDate();
+        this.order_id = invoice.getOrder().getId();
+        this.invoice_number = invoice.getInvoiceNumber();
+        this.invoice_date = invoice.getInvoiceDate() != null
+                ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(invoice.getInvoiceDate())
+                : null;
         this.amount = invoice.getAmount();
-        this.pdf = invoice.getPdf();
+        this.pdf_url = invoice.getPdf();
     }
-
-    // Getters
-    public Long getId() { return id; }
-    public Long getOrderId() { return orderId; }
-    public String getInvoiceNumber() { return invoiceNumber; }
-    public Date getInvoiceDate() { return invoiceDate; }
-    public BigDecimal getAmount() { return amount; }
-    public String getPdf() { return pdf; }
 }

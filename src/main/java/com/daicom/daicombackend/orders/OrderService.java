@@ -149,7 +149,7 @@ public class OrderService {
         recalculateOrderStatus(order); 
         Order savedOrder = orderRepository.save(order);
 
-        // --- MAGIA DE CREACIÓN EN MASA DE CERTIFICADOS (Igual a Django) ---
+        // crea los certificados que vienen en la orden
         if (request.getOrderType() != null && request.getOrderType() == 1 && request.getItems() != null) {
             java.util.Date today = new java.util.Date();
 
@@ -236,6 +236,34 @@ public class OrderService {
         order.setClient(client);
         order.setWantsInvoice(request.isWantsInvoice());
         
+        recalculateOrderStatus(order);
+        return new OrderResponse(orderRepository.save(order));
+    }
+
+    // Edición parcial: reasigna el cliente de la orden y, opcionalmente,
+    // sincroniza ese mismo cliente en los certificados seleccionados (checkboxes
+    // "Sincronizar dueño de Equipos" del frontend).
+    @Transactional
+    public OrderResponse syncOrderCertificates(Long id, OrderRequest request) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+        Client client = clientRepository.findByIdAndDeletedFalse(request.getClientId())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+        order.setClient(client);
+
+        String syncCertificates = request.getSyncCertificates();
+        if (syncCertificates != null && !syncCertificates.isBlank()) {
+            for (String rawId : syncCertificates.split(",")) {
+                rawId = rawId.trim();
+                if (rawId.isEmpty()) continue;
+                certificateRepository.findById(Long.valueOf(rawId)).ifPresent(cert -> {
+                    cert.setClient(client);
+                    certificateRepository.save(cert);
+                });
+            }
+        }
+
         recalculateOrderStatus(order);
         return new OrderResponse(orderRepository.save(order));
     }

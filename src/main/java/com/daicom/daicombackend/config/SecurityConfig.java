@@ -46,6 +46,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/login", "/auth/register").permitAll()
                 .requestMatchers("/actuator/**").permitAll() // Para el monitoreo
+                .requestMatchers("/media/**").permitAll() // Archivos (PDF base, QR) servidos al navegador
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

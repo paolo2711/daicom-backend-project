@@ -14,7 +14,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    // En producción, externalizar esto en application.properties
+    // TODO: mover a application.properties
     private static final String SECRET_KEY = "DaicomSecretKeyForJwtAuthenticationMustBeLongEnough";
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24 horas
 

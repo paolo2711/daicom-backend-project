@@ -19,14 +19,17 @@ public class LogController {
 
     @GetMapping
     public ResponseEntity<Page<LogResponse>> getLogs(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int page_size) {
+
+        // el front pagina desde 1, Spring desde 0
+        int zeroBasedPage = Math.max(page - 1, 0);
+
         // Retorna la lista paginada ordenada por los más recientes primero
         Page<LogEntry> logsPage = logEntryRepository.findAll(
-                PageRequest.of(page, size, Sort.by("createdAt").descending())
+                PageRequest.of(zeroBasedPage, page_size, Sort.by("createdAt").descending())
         );
-        
+
         return ResponseEntity.ok(logsPage.map(LogResponse::new));
     }
 }

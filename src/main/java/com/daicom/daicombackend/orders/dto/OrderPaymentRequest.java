@@ -30,4 +30,19 @@ public class OrderPaymentRequest {
     public void setNotes(String notes) { this.notes = notes; }
     public MultipartFile getFile() { return file; }
     public void setFile(MultipartFile file) { this.file = file; }
+
+    // --- Adaptadores para capturar FormData (snake_case) del Frontend ---
+    public void setPayment_method(String payment_method) {
+        this.paymentMethod = (payment_method != null && !payment_method.isBlank())
+                ? PaymentMethod.valueOf(payment_method) : null;
+    }
+    public void setPayment_date(String payment_date) {
+        try {
+            this.paymentDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(payment_date);
+        } catch (java.text.ParseException e) {
+            this.paymentDate = null;
+        }
+    }
+    // El frontend envía el archivo con el nombre de campo 'payment_proof'
+    public void setPayment_proof(MultipartFile payment_proof) { this.file = payment_proof; }
 }

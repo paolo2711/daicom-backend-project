@@ -40,6 +40,8 @@ public class CertificateRequest {
     // --- Adaptadores para capturar FormData (snake_case) del Frontend ---
     public void setClient(Long client) { this.clientId = client; }
     public void setLab(Long lab) { this.labId = lab; }
+    // vincula el cert a una orden (equipo extra nuevo)
+    public void setOrder(Long order) { this.orderId = order; }
     public void setEmission_date(String emission_date) {
         try {
             this.emissionDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(emission_date);

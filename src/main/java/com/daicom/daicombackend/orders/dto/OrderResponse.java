@@ -21,7 +21,7 @@ public class OrderResponse {
     public List<Map<String, Object>> certificates;
     public List<Map<String, Object>> payments;
     public Object detraccion = null;
-    public List<Object> invoices = new ArrayList<>();
+    public List<Map<String, Object>> invoices = new ArrayList<>();
     public Integer order_type;
 
     public BigDecimal total_facturado;
@@ -107,6 +107,20 @@ public class OrderResponse {
             }).collect(Collectors.toList());
         } else {
             this.certificates = new ArrayList<>();
+        }
+
+        // Facturas anidadas (snake_case para el frontend: order summary, ícono, etc.)
+        if (order.getInvoices() != null) {
+            this.invoices = order.getInvoices().stream().map(inv -> {
+                Map<String, Object> iMap = new HashMap<>();
+                iMap.put("id", inv.getId());
+                iMap.put("invoice_number", inv.getInvoiceNumber());
+                iMap.put("invoice_date", inv.getInvoiceDate() != null
+                        ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(inv.getInvoiceDate()) : null);
+                iMap.put("amount", inv.getAmount());
+                iMap.put("pdf_url", inv.getPdf());
+                return iMap;
+            }).collect(Collectors.toList());
         }
 
         // Pagos anidados

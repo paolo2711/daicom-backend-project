@@ -27,6 +27,11 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    // rol asignado (nullable: los usuarios viejos solo tienen el enum)
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private com.daicom.daicombackend.roles.Role roleEntity;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
@@ -46,6 +51,8 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+    public com.daicom.daicombackend.roles.Role getRoleEntity() { return roleEntity; }
+    public void setRoleEntity(com.daicom.daicombackend.roles.Role roleEntity) { this.roleEntity = roleEntity; }
     public Company getCompany() { return company; }
     public void setCompany(Company company) { this.company = company; }
 }

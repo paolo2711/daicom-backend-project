@@ -1,7 +1,10 @@
 package com.daicom.daicombackend.clients;
 
+import com.daicom.daicombackend.auth.User;
+import com.daicom.daicombackend.auth.UserRepository;
 import com.daicom.daicombackend.clients.dto.ClientRequest;
 import com.daicom.daicombackend.clients.dto.ClientResponse;
+import com.daicom.daicombackend.common.audit.AuditService;
 import com.daicom.daicombackend.company.Company;
 import com.daicom.daicombackend.company.CompanyRepository;
 import org.springframework.stereotype.Service;
@@ -14,10 +17,15 @@ public class ClientService {
 
     private final ClientRepository clientRepository;
     private final CompanyRepository companyRepository;
+    private final AuditService auditService;
+    private final UserRepository userRepository;
 
-    public ClientService(ClientRepository clientRepository, CompanyRepository companyRepository) {
+    public ClientService(ClientRepository clientRepository, CompanyRepository companyRepository,
+                          AuditService auditService, UserRepository userRepository) {
         this.clientRepository = clientRepository;
         this.companyRepository = companyRepository;
+        this.auditService = auditService;
+        this.userRepository = userRepository;
     }
 
     private Company getMainCompany() {
@@ -37,17 +45,22 @@ public class ClientService {
         return new ClientResponse(client);
     }
 
-    public ClientResponse create(ClientRequest request) {
+    public ClientResponse create(ClientRequest request, String currentUsername) {
         Client client = new Client();
         client.setName(request.getName());
         client.setDocumentType(request.getDocumentType());
-        client.setDocument(request.getDocument());
+        client.setDocument(request.getDocument() != null ? request.getDocument() : "");
         client.setAddress(request.getAddress());
         client.setPhone(request.getPhone());
         client.setEmail(request.getEmail());
         client.setCompany(getMainCompany());
-        
+
         Client savedClient = clientRepository.save(client);
+
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
+        auditService.registrar(currentUser, "CREATE_CLIENT", "Client: " + savedClient.getName());
+
         return new ClientResponse(savedClient);
     }
 
@@ -57,11 +70,11 @@ public class ClientService {
         
         client.setName(request.getName());
         client.setDocumentType(request.getDocumentType());
-        client.setDocument(request.getDocument());
+        client.setDocument(request.getDocument() != null ? request.getDocument() : "");
         client.setAddress(request.getAddress());
         client.setPhone(request.getPhone());
         client.setEmail(request.getEmail());
-        
+
         Client updatedClient = clientRepository.save(client);
         return new ClientResponse(updatedClient);
     }

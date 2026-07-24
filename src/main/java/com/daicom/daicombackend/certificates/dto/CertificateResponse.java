@@ -22,6 +22,7 @@ public class CertificateResponse {
     public boolean signature_requested;
     public String uploaded_xls;
     public String attached_pdf;
+    public boolean uploaded;
     public String created_at;
     public String updated_at;
     public String order_number;
@@ -41,6 +42,7 @@ public class CertificateResponse {
         this.signature_requested = certificate.isSignatureRequested();
         this.uploaded_xls = certificate.getUploadedXls();
         this.attached_pdf = certificate.getAttachedPdf();
+        this.uploaded = certificate.getAttachedPdf() != null && !certificate.getAttachedPdf().isEmpty();
         this.created_at = certificate.getCreatedAt() != null ? certificate.getCreatedAt().toString() : null;
         this.updated_at = certificate.getUpdatedAt() != null ? certificate.getUpdatedAt().toString() : null;
 

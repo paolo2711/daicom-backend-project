@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Datos generados en tiempo de ejecucion (no van al repositorio) ###
+logs/
+backups/
+uploads/

@@ -46,7 +46,7 @@ public class Certificate {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    // --- NUEVOS CAMPOS IDÉNTICOS A DJANGO ---
+    // campos extra del certificado
     @Column(nullable = false)
     private String equipment = "";
 

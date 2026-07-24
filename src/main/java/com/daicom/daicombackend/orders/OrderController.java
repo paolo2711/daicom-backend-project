@@ -63,6 +63,11 @@ public class OrderController {
         return ResponseEntity.ok(orderService.updateOrder(id, request));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<OrderResponse> patch(@PathVariable Long id, @Valid @RequestBody OrderRequest request) {
+        return ResponseEntity.ok(orderService.syncOrderCertificates(id, request));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         orderService.deleteOrder(id);

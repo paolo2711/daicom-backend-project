@@ -15,8 +15,15 @@ import com.daicom.daicombackend.orders.Order;
 import com.daicom.daicombackend.orders.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,11 +36,15 @@ public class CertificateService {
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final PdfQrStamper pdfQrStamper;
+
+    // carpeta que se sirve en /media/**
+    private static final String MEDIA_ROOT = "uploads";
 
     public CertificateService(CertificateRepository certificateRepository, OrderRepository orderRepository,
                               LabRepository labRepository, ClientRepository clientRepository,
                               CompanyRepository companyRepository, UserRepository userRepository,
-                              AuditService auditService) {
+                              AuditService auditService, PdfQrStamper pdfQrStamper) {
         this.certificateRepository = certificateRepository;
         this.orderRepository = orderRepository;
         this.labRepository = labRepository;
@@ -41,6 +52,7 @@ public class CertificateService {
         this.companyRepository = companyRepository;
         this.userRepository = userRepository;
         this.auditService = auditService;
+        this.pdfQrStamper = pdfQrStamper;
     }
 
     private Company getMainCompany() {
@@ -110,7 +122,7 @@ public class CertificateService {
         companyRepository.save(company);
         Certificate savedCertificate = certificateRepository.save(certificate);
 
-        // Registro de auditoría (Sección 4.9)
+        // auditoria
         auditService.registrar(currentUser, "CREATE_CERTIFICATE", "Certificate ID: " + savedCertificate.getId());
 
         return new CertificateResponse(savedCertificate);
@@ -152,7 +164,64 @@ public class CertificateService {
         return new CertificateResponse(certificateRepository.save(cert));
     }
 
-    // Editar 
+    // --- CARGA MANUAL DEL PDF BASE (antes "subir Excel") ---
+    @Transactional
+    public CertificateResponse uploadBase(Long id, MultipartFile file) {
+        Certificate cert = certificateRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Certificado no encontrado."));
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("No se recibió ningún archivo.");
+        }
+        String relativePath = saveFile(file, "bases");
+        cert.setUploadedXls(relativePath);
+        return new CertificateResponse(certificateRepository.save(cert));
+    }
+
+    // --- ESTAMPAR QR (contenido = UUID del certificado) SOBRE EL PDF BASE ---
+    @Transactional
+    public CertificateResponse attachQr(Long id) {
+        Certificate cert = certificateRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Certificado no encontrado."));
+
+        if (cert.getUploadedXls() == null || cert.getUploadedXls().isEmpty()) {
+            throw new RuntimeException("El certificado no tiene un PDF base para estampar el QR.");
+        }
+
+        File sourcePdf = Paths.get(MEDIA_ROOT, cert.getUploadedXls()).toFile();
+        if (!sourcePdf.exists()) {
+            throw new RuntimeException("No se encontró el PDF base en el servidor.");
+        }
+
+        try {
+            Path signedDir = Paths.get(MEDIA_ROOT, "signed");
+            Files.createDirectories(signedDir);
+            String fileName = UUID.randomUUID() + "_qr.pdf";
+            File outputPdf = signedDir.resolve(fileName).toFile();
+
+            pdfQrStamper.stampQr(sourcePdf, outputPdf, cert.getUuid());
+
+            cert.setAttachedPdf("signed/" + fileName);
+            return new CertificateResponse(certificateRepository.save(cert));
+        } catch (Exception e) {
+            throw new RuntimeException("Error al estampar el QR: " + e.getMessage());
+        }
+    }
+
+    // Guarda un archivo bajo uploads/<subfolder>/ y devuelve la ruta relativa a MEDIA_ROOT
+    private String saveFile(MultipartFile file, String subfolder) {
+        try {
+            Path dir = Paths.get(MEDIA_ROOT, subfolder);
+            Files.createDirectories(dir);
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path target = dir.resolve(fileName);
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            return subfolder + "/" + fileName;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al guardar el archivo: " + e.getMessage());
+        }
+    }
+
+    // Editar
     @Transactional
     public CertificateResponse update(Long id, CertificateRequest request) {
         Certificate cert = certificateRepository.findById(id)

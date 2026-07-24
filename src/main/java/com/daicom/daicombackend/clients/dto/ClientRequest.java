@@ -12,7 +12,7 @@ public class ClientRequest {
     @NotNull(message = "El tipo de documento es obligatorio")
     private DocumentType documentType;
 
-    @NotBlank(message = "El documento es obligatorio")
+    // opcional: para SIN DOCUMENTO va vacio
     private String document;
 
     private String address;

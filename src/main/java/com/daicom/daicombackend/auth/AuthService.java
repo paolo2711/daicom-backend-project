@@ -6,10 +6,14 @@ import com.daicom.daicombackend.auth.dto.ProfileResponse;
 import com.daicom.daicombackend.auth.dto.RegisterRequest;
 import com.daicom.daicombackend.company.Company;
 import com.daicom.daicombackend.company.CompanyRepository;
+import com.daicom.daicombackend.roles.RolePermission;
+import com.daicom.daicombackend.roles.RolePermissionRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -18,13 +22,43 @@ public class AuthService {
     private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RolePermissionRepository rolePermissionRepository;
 
-    public AuthService(UserRepository userRepository, CompanyRepository companyRepository, 
-                       PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public AuthService(UserRepository userRepository, CompanyRepository companyRepository,
+                       PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
+                       RolePermissionRepository rolePermissionRepository) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.rolePermissionRepository = rolePermissionRepository;
+    }
+
+    // Determina si el usuario es administrador (acceso irrestricto)
+    private boolean isAdmin(User user) {
+        if (user.getRoleEntity() != null && user.getRoleEntity().isAdmin()) return true;
+        return user.getRole() == Role.ADMIN;
+    }
+
+    // Arma la respuesta de auth con kind (id de rol; 0 = admin) y los permisos concedidos
+    private AuthResponse buildAuthResponse(User user, String token) {
+        boolean admin = isAdmin(user);
+        String roleName = admin ? "ADMIN" : "USER";
+
+        Integer kind;
+        List<Integer> permissions = new ArrayList<>();
+
+        if (admin) {
+            kind = 0; // kind < 1 → el frontend lo trata como acceso total
+        } else if (user.getRoleEntity() != null) {
+            kind = user.getRoleEntity().getId().intValue();
+            permissions = rolePermissionRepository.findByRoleId(user.getRoleEntity().getId())
+                    .stream().map(RolePermission::getPermissionCode).collect(Collectors.toList());
+        } else {
+            kind = -1; // usuario sin rol granular: sin permisos
+        }
+
+        return new AuthResponse(token, user.getUsername(), roleName, kind, permissions);
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -35,7 +69,7 @@ public class AuthService {
             throw new RuntimeException("Error: El email ya está en uso.");
         }
 
-        // Obtener la compañía única (asumimos que DataSeeder ya la creó)
+        // company principal (la crea el DataSeeder)
         List<Company> companies = companyRepository.findAll();
         if (companies.isEmpty()) {
             throw new RuntimeException("Error de sistema: No existe compañía registrada.");
@@ -54,7 +88,7 @@ public class AuthService {
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
-        return new AuthResponse(token, user.getUsername(), user.getRole().name());
+        return buildAuthResponse(user, token);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -66,7 +100,7 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
-        return new AuthResponse(token, user.getUsername(), user.getRole().name());
+        return buildAuthResponse(user, token);
     }
 
     public ProfileResponse getProfile(String username) {

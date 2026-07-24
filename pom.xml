@@ -46,6 +46,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		<!-- Monitoreo: health tools + performance/metrics -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>com.mysql</groupId>
@@ -80,6 +85,24 @@
 			<version>0.12.6</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- Estampado de PDF (fondo base + QR) -->
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>2.0.31</version>
+		</dependency>
+		<!-- Generación de código QR -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.5.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>javase</artifactId>
+			<version>3.5.3</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -87,6 +110,22 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!--
+			  Pruebas de seguridad: OWASP Dependency-Check.
+			  Analiza las dependencias en busca de vulnerabilidades conocidas (CVE).
+			  Ejecutar bajo demanda:  mvnw org.owasp:dependency-check-maven:check
+			  Genera el reporte en:   target/dependency-check-report.html
+			-->
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>10.0.4</version>
+				<configuration>
+					<formats>
+						<format>HTML</format>
+					</formats>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

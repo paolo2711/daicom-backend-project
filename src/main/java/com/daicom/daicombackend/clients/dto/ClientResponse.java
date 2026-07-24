@@ -6,7 +6,8 @@ public class ClientResponse {
 
     private Long id;
     private String name;
-    private String documentType;
+    private Integer documentType;
+    private String documentType_name;
     private String document;
     private String address;
     private String phone;
@@ -15,7 +16,8 @@ public class ClientResponse {
     public ClientResponse(Client client) {
         this.id = client.getId();
         this.name = client.getName();
-        this.documentType = client.getDocumentType().name();
+        this.documentType = client.getDocumentType().getCode();
+        this.documentType_name = client.getDocumentType().getLabel();
         this.document = client.getDocument();
         this.address = client.getAddress();
         this.phone = client.getPhone();
@@ -25,7 +27,8 @@ public class ClientResponse {
     // Getters
     public Long getId() { return id; }
     public String getName() { return name; }
-    public String getDocumentType() { return documentType; }
+    public Integer getDocumentType() { return documentType; }
+    public String getDocumentType_name() { return documentType_name; }
     public String getDocument() { return document; }
     public String getAddress() { return address; }
     public String getPhone() { return phone; }
