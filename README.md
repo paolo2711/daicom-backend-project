@@ -1,0 +1,12 @@
+EJECUTABLE_JAR
+DAICOM - aplicacion ejecutable (backend + web en un solo archivo)
+
+Requisitos: Java 17 y MySQL/MariaDB (XAMPP).
+
+Primera vez:
+  1. Importar daicom_demo.sql en MySQL (crea la base daicom_demo con datos).
+  2. Doble clic en INICIAR.bat  ->  abre solo en http://localhost:8080
+
+Login:
+  usuario: admin1234
+  contrasena: 123456
