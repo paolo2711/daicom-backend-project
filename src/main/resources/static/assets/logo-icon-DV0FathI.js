@@ -1,0 +1,1 @@
+var e=`/assets/logo-icon-COKDEMLk.png`;export{e as t};

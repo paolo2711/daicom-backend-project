@@ -47,6 +47,8 @@ public class SecurityConfig {
                 .requestMatchers("/auth/login", "/auth/register").permitAll()
                 .requestMatchers("/actuator/**").permitAll() // Para el monitoreo
                 .requestMatchers("/media/**").permitAll() // Archivos (PDF base, QR) servidos al navegador
+                // Frontend servido desde el propio JAR (index, assets, favicon)
+                .requestMatchers("/", "/index.html", "/favicon.ico", "/assets/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

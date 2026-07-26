@@ -1,0 +1,1 @@
+import{Ct as e,It as t,Ot as n,Vt as r,mt as i,zt as a}from"./index-Dm2p1SFq.js";var o={__name:`Blanklayout`,setup(o){return(o,s)=>{let c=a(`router-view`);return t(),e(i,null,{default:r(()=>[n(c)]),_:1})}}};export{o as default};

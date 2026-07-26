@@ -35,12 +35,14 @@ public class OrderService {
     // Repositorios para los certificados
     private final com.daicom.daicombackend.certificates.CertificateRepository certificateRepository;
     private final com.daicom.daicombackend.labs.LabRepository labRepository;
+    private final com.daicom.daicombackend.reports.OrderExcelExporter orderExcelExporter;
 
     public OrderService(OrderRepository orderRepository, OrderInvoiceRepository invoiceRepository,
                         OrderPaymentRepository paymentRepository, ClientRepository clientRepository,
                         CompanyRepository companyRepository, AuditService auditService, UserRepository userRepository,
                         com.daicom.daicombackend.certificates.CertificateRepository certificateRepository,
-                        com.daicom.daicombackend.labs.LabRepository labRepository) {
+                        com.daicom.daicombackend.labs.LabRepository labRepository,
+                        com.daicom.daicombackend.reports.OrderExcelExporter orderExcelExporter) {
         this.orderRepository = orderRepository;
         this.invoiceRepository = invoiceRepository;
         this.paymentRepository = paymentRepository;
@@ -50,6 +52,7 @@ public class OrderService {
         this.userRepository = userRepository;
         this.certificateRepository = certificateRepository;
         this.labRepository = labRepository;
+        this.orderExcelExporter = orderExcelExporter;
     }
 
     private Company getMainCompany() {
@@ -218,6 +221,19 @@ public class OrderService {
 
     public List<OrderResponse> findAllOrders() {
         return orderRepository.findAll().stream().map(OrderResponse::new).collect(Collectors.toList());
+    }
+
+   
+    public byte[] exportOrdersToExcel(List<Long> ids) {
+        List<Order> orders;
+        if (ids == null || ids.isEmpty()) {
+            orders = orderRepository.findAll();
+        } else {
+            java.util.Map<Long, Order> porId = orderRepository.findAllById(ids).stream()
+                    .collect(Collectors.toMap(Order::getId, o -> o));
+            orders = ids.stream().map(porId::get).filter(java.util.Objects::nonNull).collect(Collectors.toList());
+        }
+        return orderExcelExporter.build(orders);
     }
 
     public OrderResponse getOrderById(Long id) {

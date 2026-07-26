@@ -29,7 +29,6 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getNextOrderCorrelative());
     }
 
-    // --- ENDPOINTS (Para que los Smart Chips de Vue no tiren error 404) ---
     @GetMapping("/summary/pending-payments")
     public ResponseEntity<java.util.Map<String, Integer>> getPendingPayments() {
         return ResponseEntity.ok(java.util.Collections.singletonMap("pending_payments", 0));
@@ -72,5 +71,20 @@ public class OrderController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         orderService.deleteOrder(id);
         return ResponseEntity.noContent().build();
+    }
+
+ 
+    @PostMapping("/export")
+    public ResponseEntity<byte[]> exportExcel(@RequestBody(required = false) java.util.Map<String, List<Long>> body) {
+        List<Long> ids = body != null ? body.get("ids") : null;
+        byte[] excel = orderService.exportOrdersToExcel(ids);
+
+        String nombre = "reporte_cobranzas_" + java.time.LocalDate.now() + ".xlsx";
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDispositionFormData("attachment", nombre);
+
+        return ResponseEntity.ok().headers(headers).body(excel);
     }
 }
